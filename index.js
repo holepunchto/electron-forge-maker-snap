@@ -53,6 +53,7 @@ class MakerSnap extends MakerBase {
       .replace('__SUMMARY__', this.config.summary)
       .replace('__DESCRIPTION__', this.config.description)
       .replace('__SOURCE__', path.relative(buildDir, dir))
+      .replace('__NAME__', appName)
     fs.writeFileSync(path.join(snapDir, 'snapcraft.yaml'), snapcraftYamlSource)
 
     const outputFile = path.join(snapDir, `${snapName}_${version}_${snapArch}.snap`)
