@@ -42,7 +42,8 @@ class MakerSnap extends MakerBase {
 
     // Copy snapcraft.yaml into build dir
     const buildDir = path.dirname(dir)
-    const snapDir = path.join(buildDir, 'snap')
+    const snapStr = 'snap'
+    const snapDir = path.join(buildDir, snapStr)
     fs.rmSync(snapDir, { recursive: true, force: true })
     fs.mkdirSync(snapDir)
 
@@ -59,7 +60,7 @@ class MakerSnap extends MakerBase {
     const outputFile = path.join(snapDir, `${snapName}_${version}_${snapArch}.snap`)
 
     // Run snapcraft
-    execSync(`sudo -u $USER -E snapcraft pack --output ${snapDir}`, {
+    execSync(`sudo -u $USER -E snapcraft pack --output ${snapStr}`, {
       cwd: buildDir,
       stdio: 'inherit',
       shell: true,
