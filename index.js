@@ -46,8 +46,16 @@ class MakerSnap extends MakerBase {
       throw new Error(`MakerSnap: website needs to be defined: ${this.config.website}`)
     }
 
+    if (!this.config.icon) {
+      throw new Error(`MakerSnap: icon needs to be defined: ${this.config.icon}`)
+    }
+
     if (!fs.existsSync(snapcraftYamlPath)) {
       throw new Error(`MakerSnap: snapcraft.yaml not found at ${snapcraftYamlPath}`)
+    }
+
+    if (!fs.existsSync(this.config.icon)) {
+      throw new Error(`MakerSnap: icon not found at ${this.config.icon}`)
     }
 
     // Map electron arch to snap arch
@@ -62,6 +70,20 @@ class MakerSnap extends MakerBase {
     fs.rmSync(snapDir, { recursive: true, force: true })
     fs.mkdirSync(snapDir)
 
+    // Create icon and desktop files in snap/gui
+    const iconFile = `${snapName}.png`
+    const desktopFile = `${snapName}.desktop`
+    const snapGuiPath = 'snap/gui'
+    const iconPath = `${snapGuiPath}/${iconFile}`
+    const desktopPath = `${snapGuiPath}/${desktopFile}`
+    const snapGuiPathAbs = path.join(dir, snapGuiPath)
+    fs.mkdirSync(snapGuiPathAbs, { recursive: true })
+    fs.copyFileSync(this.config.icon, path.join(snapGuiPathAbs, iconFile))
+    fs.writeFileSync(path.join(snapGuiPathAbs, desktopFile), `[Desktop Entry]
+Exec=${snapName}
+Icon=\${SNAP}/meta/gui/${snapName}.png
+`, 'utf8')
+
     // Copy snapcraft.yaml into build dir
     const snapcraftYamlSource = fs
       .readFileSync(snapcraftYamlPath, 'utf8')
@@ -70,12 +92,14 @@ class MakerSnap extends MakerBase {
       .replace('__DESCRIPTION__', this.config.description)
       .replace('__SOURCE__', path.relative(buildDir, dir))
       .replace('__BIN__', appName)
-      .replace('__NAME__', appName.toLowerCase())
+      .replace('__NAME__', snapName)
       .replace('__TITLE__', appName.replace('-', ' '))
       .replace('__CONTACT__', this.config.contact)
       .replace('__LICENSE__', this.config.license)
       .replace('__ISSUES__', this.config.issues)
       .replace('__WEBSITE__', this.config.website)
+      .replace('__ICON__', iconPath)
+      .replace('__DESKTOP__', desktopPath)
     fs.writeFileSync(path.join(snapDir, 'snapcraft.yaml'), snapcraftYamlSource)
 
     const outputFile = path.join(makeDir, `${snapName}_${version}_${snapArch}.snap`)
