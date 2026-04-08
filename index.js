@@ -30,6 +30,22 @@ class MakerSnap extends MakerBase {
       throw new Error(`MakerSnap: description needs to be defined: ${this.config.description}`)
     }
 
+    if (!this.config.contact) {
+      throw new Error(`MakerSnap: contact needs to be defined: ${this.config.contact}`)
+    }
+
+    if (!this.config.license) {
+      throw new Error(`MakerSnap: license needs to be defined: ${this.config.license}`)
+    }
+
+    if (!this.config.issues) {
+      throw new Error(`MakerSnap: issues needs to be defined: ${this.config.issues}`)
+    }
+
+    if (!this.config.website) {
+      throw new Error(`MakerSnap: website needs to be defined: ${this.config.website}`)
+    }
+
     if (!fs.existsSync(snapcraftYamlPath)) {
       throw new Error(`MakerSnap: snapcraft.yaml not found at ${snapcraftYamlPath}`)
     }
@@ -37,7 +53,7 @@ class MakerSnap extends MakerBase {
     // Map electron arch to snap arch
     const snapArch = { x64: 'amd64', arm64: 'arm64', armv7l: 'armhf' }[targetArch] || targetArch
 
-    const snapName = (packageJSON.name || appName).toLowerCase().replace(/[^a-z0-9-]/g, '-')
+    const snapName = appName.toLowerCase().replace(/[^a-z0-9-]/g, '-')
     const { version } = packageJSON
 
     // Copy snapcraft.yaml into build dir
@@ -53,7 +69,13 @@ class MakerSnap extends MakerBase {
       .replace('__SUMMARY__', this.config.summary)
       .replace('__DESCRIPTION__', this.config.description)
       .replace('__SOURCE__', path.relative(buildDir, dir))
-      .replace('__NAME__', appName)
+      .replace('__BIN__', appName)
+      .replace('__NAME__', appName.toLowerCase())
+      .replace('__TITLE__', appName.replace('-', ' '))
+      .replace('__CONTACT__', this.config.contact)
+      .replace('__LICENSE__', this.config.license)
+      .replace('__ISSUES__', this.config.issues)
+      .replace('__WEBSITE__', this.config.website)
     fs.writeFileSync(path.join(snapDir, 'snapcraft.yaml'), snapcraftYamlSource)
 
     const outputFile = path.join(makeDir, `${snapName}_${version}_${snapArch}.snap`)
