@@ -58,9 +58,10 @@ class MakerSnap extends MakerBase {
     const outputFile = path.join(snapDir, `${snapName}_${version}_${snapArch}.snap`)
 
     // Run snapcraft
-    execSync(`snapcraft pack --output ${snapDir}`, {
+    execSync(`sudo -u $USER -E snapcraft pack --output ${snapDir}`, {
       cwd: buildDir,
       stdio: 'inherit',
+      shell: true,
       env: {
         ...process.env
       }
