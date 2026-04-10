@@ -1,6 +1,6 @@
 {
   "name": "@holepunchto/electron-forge-maker-snap",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "repo-template",
   "main": "index.js",
   "exports": {
