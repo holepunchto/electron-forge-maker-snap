@@ -14,7 +14,7 @@ class MakerSnap extends MakerBase {
     return process.platform === 'linux'
   }
 
-  async make({ dir, appName, packageJSON, targetArch, makeDir }) {
+  async make({ dir, appName, packageJSON, targetArch, makeDir, forgeConfig }) {
     if (!this.config.snapcraftYamlPath) {
       throw new Error(
         `MakerSnap: snapcraftYamlPath needs to be defined: ${this.config.snapcraftYamlPath}`
@@ -64,6 +64,12 @@ class MakerSnap extends MakerBase {
     const snapName = appName.toLowerCase().replace(/[^a-z0-9-]/g, '-')
     const { version } = packageJSON
 
+    // Parse protocols
+    const protocols = forgeConfig?.packagerConfig?.protocols || []
+    const schemes = protocols.flatMap((p) => p?.schemes || []).filter(Boolean)
+    const mimeTypes = schemes.map((s) => `x-scheme-handler/${s}`).join(';')
+    const execValue = schemes.length ? `${snapName} %U` : snapName
+
     // Copy snapcraft.yaml into build dir
     const buildDir = path.dirname(dir)
     const snapDir = path.join(buildDir, 'snap')
@@ -77,18 +83,23 @@ class MakerSnap extends MakerBase {
     const iconPath = `${snapGuiPath}/${iconFile}`
     const desktopPath = `${snapGuiPath}/${desktopFile}`
     const snapGuiPathAbs = path.join(dir, snapGuiPath)
+
+    const desktop = {
+      Name: appName,
+      Exec: execValue,
+      Icon: `\${SNAP}/meta/gui/${snapName}.png`,
+      Type: 'Application',
+      ...(mimeTypes ? { MimeType: `${mimeTypes};` } : {})
+    }
+
+    const desktopLines = [
+      '[Desktop Entry]',
+      ...Object.entries(desktop).map(([k, v]) => `${k}=${v}`)
+    ]
+
     fs.mkdirSync(snapGuiPathAbs, { recursive: true })
     fs.copyFileSync(this.config.icon, path.join(snapGuiPathAbs, iconFile))
-    fs.writeFileSync(
-      path.join(snapGuiPathAbs, desktopFile),
-      `[Desktop Entry]
-Name=${appName}
-Exec=${snapName}
-Icon=\${SNAP}/meta/gui/${snapName}.png
-Type=Application
-`,
-      'utf8'
-    )
+    fs.writeFileSync(path.join(snapGuiPathAbs, desktopFile), desktopLines.join('\n'), 'utf8')
 
     // Copy snapcraft.yaml into build dir
     const snapcraftYamlSource = fs
