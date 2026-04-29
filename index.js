@@ -121,6 +121,10 @@ class MakerSnap extends MakerBase {
 
     const outputFile = path.join(makeDir, `${snapName}_${version}_${snapArch}.snap`)
 
+    if (!fs.existsSync(makeDir)) {
+      fs.mkdirSync(makeDir, { recursive: true })
+    }
+
     // Run snapcraft
     execSync(`sudo -u $USER -E snapcraft pack --output make`, {
       cwd: buildDir,
