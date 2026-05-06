@@ -1,11 +1,11 @@
-# @pear-/electron-forge-maker-snap
+# pear-electron-forge-maker-snap
 
 An electron-forge builder for Snap.
 
 ## Usage
 
 ```bash
-npm install @pear-/electron-forge-maker-snap --save-dev
+npm install pear-electron-forge-maker-snap --save-dev
 ```
 
 ## forge.config.js
@@ -13,7 +13,7 @@ npm install @pear-/electron-forge-maker-snap --save-dev
 ```js
 makers: [
   {
-    name: '@pear-/electron-forge-maker-snap',
+    name: 'pear-electron-forge-maker-snap',
     platforms: ['linux'],
     config: {
       snapcraftYamlPath: 'snapcraft.yaml',
