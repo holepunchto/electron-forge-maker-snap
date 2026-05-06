@@ -1,5 +1,5 @@
 {
-  "name": "@holepunchto/electron-forge-maker-snap",
+  "name": "@pear-/electron-forge-maker-snap",
   "version": "0.0.9",
   "description": "repo-template",
   "main": "index.js",
