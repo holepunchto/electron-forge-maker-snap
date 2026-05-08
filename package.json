@@ -1,6 +1,6 @@
 {
   "name": "pear-electron-forge-maker-snap",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "repo-template",
   "main": "index.js",
   "exports": {
