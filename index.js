@@ -14,7 +14,7 @@ class MakerSnap extends MakerBase {
     return process.platform === 'linux'
   }
 
-  async make({ dir, appName, packageJSON, targetArch, makeDir, forgeConfig }) {
+  make({ dir, appName, packageJSON, targetArch, makeDir, forgeConfig }) {
     if (!this.config.snapcraftYamlPath) {
       throw new Error(
         `MakerSnap: snapcraftYamlPath needs to be defined: ${this.config.snapcraftYamlPath}`
