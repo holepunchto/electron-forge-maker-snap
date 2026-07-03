@@ -3,6 +3,68 @@ const { execSync } = require('child_process')
 const path = require('path')
 const fs = require('fs')
 
+function deepMerge(target, source) {
+  if (!source || typeof source !== 'object') {
+    return target
+  }
+
+  for (const [key, value] of Object.entries(source)) {
+    if (value === undefined) continue
+
+    if (
+      value &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      target[key] &&
+      typeof target[key] === 'object' &&
+      !Array.isArray(target[key])
+    ) {
+      deepMerge(target[key], value)
+    } else {
+      target[key] = value
+    }
+  }
+
+  return target
+}
+
+function toYaml(json, indent = 0, fragment = '') {
+  let yaml = ''
+  const keys = Object.keys(json)
+  if (keys.length === 0) {
+    throw new Error(`Object cannot be empty: ${json}`)
+  }
+  for (let i = 0; i < keys.length; ++i) {
+    const key = keys[i]
+    const value = json[key]
+
+    const currentFragment = fragment === '' ? key : `${fragment}.${key}`
+
+    yaml += ' '.repeat(indent) + `${key}:`
+
+    if (typeof value === 'string') {
+      yaml += ` ${value}\n`
+    } else if (Array.isArray(value)) {
+      if (value.length === 0) {
+        yaml += ' []\n'
+      } else {
+        yaml += '\n'
+        for (let j = 0; j < value.length; ++j) {
+          if (typeof value[j] !== 'string') {
+            throw new Error(`Invalid value at ${currentFragment}[${j}]: ${value[j]}`)
+          }
+          yaml += ' '.repeat(indent + 2) + `- ${value[j]}\n`
+        }
+      }
+    } else if (typeof value === 'object' && value !== null && value !== undefined) {
+      yaml += '\n' + toYaml(value, indent + 2, currentFragment)
+    } else {
+      throw new Error(`Invalid value at ${currentFragment}: ${value}`)
+    }
+  }
+  return yaml
+}
+
 class MakerSnap extends MakerBase {
   name = 'snap'
 
@@ -15,48 +77,23 @@ class MakerSnap extends MakerBase {
   }
 
   make({ dir, appName, packageJSON, targetArch, makeDir, forgeConfig }) {
-    if (!this.config.snapcraftYamlPath) {
-      throw new Error(
-        `MakerSnap: snapcraftYamlPath needs to be defined: ${this.config.snapcraftYamlPath}`
-      )
-    }
-    const { snapcraftYamlPath } = this.config
-
-    if (!this.config.summary) {
-      throw new Error(`MakerSnap: summary needs to be defined: ${this.config.summary}`)
-    }
-
-    if (!this.config.description) {
-      throw new Error(`MakerSnap: description needs to be defined: ${this.config.description}`)
-    }
-
-    if (!this.config.contact) {
-      throw new Error(`MakerSnap: contact needs to be defined: ${this.config.contact}`)
-    }
-
-    if (!this.config.license) {
-      throw new Error(`MakerSnap: license needs to be defined: ${this.config.license}`)
-    }
-
-    if (!this.config.issues) {
-      throw new Error(`MakerSnap: issues needs to be defined: ${this.config.issues}`)
-    }
-
-    if (!this.config.website) {
-      throw new Error(`MakerSnap: website needs to be defined: ${this.config.website}`)
-    }
-
     if (!this.config.icon) {
       throw new Error(`MakerSnap: icon needs to be defined: ${this.config.icon}`)
-    }
-
-    if (!fs.existsSync(snapcraftYamlPath)) {
-      throw new Error(`MakerSnap: snapcraft.yaml not found at ${snapcraftYamlPath}`)
     }
 
     if (!fs.existsSync(this.config.icon)) {
       throw new Error(`MakerSnap: icon not found at ${this.config.icon}`)
     }
+
+    if (
+      this.config.snapcraft !== null &&
+      this.config.snapcraft !== undefined &&
+      typeof this.config.snapcraft !== 'object'
+    ) {
+      throw new Error('MakerSnap: snapcraft must be an object')
+    }
+
+    const { app, part, ...root } = this.config.snapcraft || {}
 
     // Map electron arch to snap arch
     const snapArch = { x64: 'amd64', arm64: 'arm64', armv7l: 'armhf' }[targetArch] || targetArch
@@ -101,22 +138,45 @@ class MakerSnap extends MakerBase {
     fs.copyFileSync(this.config.icon, path.join(snapGuiPathAbs, iconFile))
     fs.writeFileSync(path.join(snapGuiPathAbs, desktopFile), desktopLines.join('\n'), 'utf8')
 
-    // Copy snapcraft.yaml into build dir
-    const snapcraftYamlSource = fs
-      .readFileSync(snapcraftYamlPath, 'utf8')
-      .replace('__VERSION__', `'${version}'`)
-      .replace('__SUMMARY__', this.config.summary)
-      .replace('__DESCRIPTION__', this.config.description)
-      .replace('__SOURCE__', path.relative(buildDir, dir))
-      .replace('__BIN__', appName)
-      .replace('__NAME__', snapName)
-      .replace('__TITLE__', appName.replace('-', ' '))
-      .replace('__CONTACT__', this.config.contact)
-      .replace('__LICENSE__', this.config.license)
-      .replace('__ISSUES__', this.config.issues)
-      .replace('__WEBSITE__', this.config.website)
-      .replace('__ICON__', iconPath)
-      .replace('__DESKTOP__', desktopPath)
+    // Write snapcraft.yaml into build dir
+    const snapcraftConfig = {
+      title: appName.replace('-', ' '),
+      grade: 'stable',
+      confinement: 'strict',
+      parts: {
+        [snapName]: {
+          plugin: 'dump',
+          source: path.relative(buildDir, dir)
+        }
+      },
+      apps: {
+        [snapName]: {
+          command: `${appName} --no-sandbox`,
+          desktop: desktopPath
+        }
+      }
+    }
+
+    deepMerge(snapcraftConfig, root)
+    deepMerge(snapcraftConfig.apps[snapName], app)
+    deepMerge(snapcraftConfig.parts[snapName], part)
+
+    snapcraftConfig.name = snapName
+    snapcraftConfig.base = 'core24'
+    snapcraftConfig.version = version
+    snapcraftConfig.icon = iconPath
+
+    snapcraftConfig.apps[snapName].command = `${appName} --no-sandbox`
+    snapcraftConfig.apps[snapName].desktop = desktopPath
+
+    snapcraftConfig.parts[snapName].plugin = 'dump'
+    snapcraftConfig.parts[snapName].source = path.relative(buildDir, dir)
+
+    if (this.config.snapcraft?.raw) {
+      deepMerge(snapcraftConfig, this.config.snapcraft.raw)
+    }
+
+    const snapcraftYamlSource = toYaml(snapcraftConfig)
     fs.writeFileSync(path.join(snapDir, 'snapcraft.yaml'), snapcraftYamlSource)
 
     const outputFile = path.join(makeDir, `${snapName}_${version}_${snapArch}.snap`)
