@@ -1,5 +1,5 @@
 const { MakerBase } = require('@electron-forge/maker-base')
-const { execSync } = require('child_process')
+const { execFileSync } = require('child_process')
 const path = require('path')
 const fs = require('fs')
 
@@ -186,13 +186,9 @@ class MakerSnap extends MakerBase {
     }
 
     // Run snapcraft
-    execSync(`sudo -u $USER -E snapcraft pack --output make`, {
+    execFileSync('sudo', ['-u', process.env.USER, '-E', 'snapcraft', 'pack', '--output', 'make'], {
       cwd: buildDir,
-      stdio: 'inherit',
-      shell: true,
-      env: {
-        ...process.env
-      }
+      stdio: 'inherit'
     })
 
     return [outputFile]
