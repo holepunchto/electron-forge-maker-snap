@@ -22,6 +22,7 @@ makers: [
 
       snapcraft: {
         // Global snapcraft fields (optional overrides)
+        // See: https://documentation.ubuntu.com/snapcraft/9.0/reference/snapcraft-yaml/#top-level-keys
         summary: 'Experience secure, private messaging and file sharing without intermediaries',
         description:
           'Discover https://Keet.io, the ultimate decentralized, peer-to-peer communication platform. Enjoy secure, private, and efficient messaging and file sharing without intermediaries. Experience true digital privacy and freedom with https://Keet.io',
@@ -31,6 +32,7 @@ makers: [
         website: 'https://keet.io',
 
         // App-level overrides merged into apps[snapName]
+        // See: https://documentation.ubuntu.com/snapcraft/9.0/reference/snapcraft-yaml/#app-keys
         app: {
           plugs: [
             'network',
@@ -42,11 +44,13 @@ makers: [
         },
 
         // Part-level overrides merged into parts[snapName]
+        // See: https://documentation.ubuntu.com/snapcraft/9.0/reference/snapcraft-yaml/#part-keys
         part: {
           'stage-packages': ['libatomic1']
         }
 
         // Raw can fully override the final generated config
+        // See: https://documentation.ubuntu.com/snapcraft/9.0/reference/snapcraft-yaml/
         raw: {
           base: 'core26'
         }
