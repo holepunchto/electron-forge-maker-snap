@@ -186,22 +186,10 @@ class MakerSnap extends MakerBase {
     }
 
     // Run snapcraft
-    execFileSync(
-      'sudo',
-      [
-        '-u',
-        process.env.USER,
-        '-E',
-        'snapcraft',
-        'pack',
-        '--output',
-        'make',
-      ],
-      {
-        cwd: buildDir,
-        stdio: 'inherit',
-      }
-    )
+    execFileSync('sudo', ['-u', process.env.USER, '-E', 'snapcraft', 'pack', '--output', 'make'], {
+      cwd: buildDir,
+      stdio: 'inherit'
+    })
 
     return [outputFile]
   }
