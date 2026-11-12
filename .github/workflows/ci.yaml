@@ -10,6 +10,4 @@ jobs:
     name: Lint
     steps:
       - uses: holepunchto/actions/node-base@v1
-        with:
-          allow-git: root
       - run: npm run lint
