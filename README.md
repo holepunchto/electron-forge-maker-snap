@@ -4,6 +4,13 @@ An Electron Forge maker for building Linux Snap packages.
 
 This maker generates a `snapcraft.yaml` automatically from your Electron Forge configuration, while still allowing deep customization via structured overrides.
 
+## Requirements
+
+- Electron Forge 8 (this package is ESM-only, as Forge 8 loads makers with `import()`)
+- Node.js >= 22.13.0
+
+For Electron Forge 7, use the 1.x releases of this package.
+
 ## Usage
 
 ```bash

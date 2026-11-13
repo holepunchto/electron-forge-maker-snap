@@ -2,6 +2,7 @@
   "name": "pear-electron-forge-maker-snap",
   "version": "1.0.0",
   "description": "repo-template",
+  "type": "module",
   "main": "index.js",
   "exports": {
     "./package": "./package.json",
@@ -24,6 +25,9 @@
     "test": "brittle-bare test/index.js",
     "lint": "prettier . --check && lunte"
   },
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/holepunchto/electron-forge-maker-snap.git"
@@ -35,7 +39,6 @@
   },
   "homepage": "https://github.com/holepunchto/electron-forge-maker-snap",
   "dependencies": {
-    "@electron-forge/maker-base": "^7.11.1",
-    "@electron/node-gyp": "https://github.com/electron/node-gyp#06b29aafb7708acef8b3669835c8a7857ebc92d2"
+    "@electron-forge/maker-base": "^8.0.1"
   }
 }
